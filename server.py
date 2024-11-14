@@ -11,8 +11,10 @@ def home():
     <p>Use the following endpoints:</p>
     <ul>
         <li><b>/about</b> - About page</li>
-        <li><b>/api/products</b> - Get all products</li>
-        <li><b>/api/products/count</b> - Get product count</li>
+        <li><b>/api/catalog</b> - Get all products in the catalog</li>
+        <li><b>/api/catalog</b> - Add new product to the catalog</li>
+        <li><b>/api/reports/total</b> - Get the total value of all products</li>
+        <li><b>/api/products/{category}</b> - Get products by category</li>
     </ul>
     """
 
@@ -21,58 +23,34 @@ def home():
 def about():
     return """
     <h1>About This API</h1>
-    <p>This API is designed to manage a product catalog.</p>
-    <p>It allows you to get, add, update, and delete products.</p>
+    <p>This API allows you to manage a product catalog. You can add, view, update, and delete products, as well as view reports.</p>
     """
 
-# Product List
+# Products list
 products = []
 
-@app.get("/api/products")
-def get_products():
+@app.get("/api/catalog")
+def get_catalog():
     return json.dumps(products)
 
-# Count products
-@app.get("/api/products/count")
-def get_product_count():
-    return json.dumps({"count": len(products)})
-
-# Save a new product (POST)
-@app.post("/api/products")
+@app.post("/api/catalog")
 def save_product():
     item = request.get_json()
-    print(item)
+# Check if the product has the required fields
+    if 'name' not in item or 'price' not in item or 'category' not in item:
+        return "Product must have 'name', 'price', and 'category'.", 400
     products.append(item)
-    return json.dumps(item)
+    return json.dumps(item), 201
 
-# Update a product (PUT)
-@app.put("/api/products/<int:index>")
-def update_product(index):
-    updated_item = request.get_json()
-    if 0 <= index < len(products):
-        products[index] = updated_item
-        return json.dumps(updated_item)
-    else:
-        return "That index does not exist"
+@app.get("/api/reports/total")
+def get_total_value():
+    total_value = sum(product['price'] for product in products if 'price' in product)
+    return json.dumps({"total_value": total_value})
 
-# Delete a product (DELETE)
-@app.delete("/api/products/<int:index>")
-def delete_product(index):
-    if 0 <= index < len(products):
-        deleted_item = products.pop(index)
-        return json.dumps(deleted_item)
-    else:
-        return "That index does not exist"
-
-# Partially update a product (PATCH)
-@app.patch("/api/products/<int:index>")
-def patch_product(index):
-    updated_field = request.get_json()
-    if 0 <= index < len(products):
-        products[index].update(updated_field)
-        return json.dumps(products[index])
-    else:
-        return "That index does not exist"
+@app.get("/api/products/<category>")
+def get_products_by_category(category):
+    filtered_products = [product for product in products if product.get('category') == category]
+    return json.dumps(filtered_products)
 
 # Run the Flask server
 app.run(debug=True)
