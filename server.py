@@ -3,79 +3,76 @@ import json
 
 app = Flask(__name__)
 
+# Welcome page (root)
 @app.get("/")
 def home():
-    return "hello from flask"
-# this is an example
-# @app.post("/")
-#def homePost():
-#    return "hello from the test server"
+    return """
+    <h1>Welcome to the Product API</h1>
+    <p>Use the following endpoints:</p>
+    <ul>
+        <li><b>/about</b> - About page</li>
+        <li><b>/api/products</b> - Get all products</li>
+        <li><b>/api/products/count</b> - Get product count</li>
+    </ul>
+    """
 
-# Endpoints
-@app.get("/test")
-def text():
-    return "hello from the test server"
+# About Page
+@app.get("/about")
+def about():
+    return """
+    <h1>About This API</h1>
+    <p>This API is designed to manage a product catalog.</p>
+    <p>It allows you to get, add, update, and delete products.</p>
+    """
 
-# endPoint using json
-app.get("/api/about")
-def aboutGet():
-    name = {"name": "Adrian"}
-    return json.dumps(name)
-
-# create a new route /greet/{name}, this route should accept name
-# as part  of the url and return an htmo message saying hello {name}
-
-@app.get("/greet/<name>")
-def greet(name):
-    return f"""
-    <h1 style=color:blue>Hello {name}!</h1>"""
-
-# by creating the farewell message
-@app.get("/farewell/<name>")
-def farewell(name):
-    return f"""
-    <h1 style=color:blue>bye bye {name}!</h1>"""
-
-# ###############################################
+# Product List
 products = []
+
 @app.get("/api/products")
 def get_products():
     return json.dumps(products)
 
+# Count products
+@app.get("/api/products/count")
+def get_product_count():
+    return json.dumps({"count": len(products)})
+
+# Save a new product (POST)
 @app.post("/api/products")
-def save_products():
+def save_product():
     item = request.get_json()
     print(item)
     products.append(item)
     return json.dumps(item)
 
+# Update a product (PUT)
 @app.put("/api/products/<int:index>")
-def update_products(index):
+def update_product(index):
     updated_item = request.get_json()
-    if 0 <= index <= len(products):
+    if 0 <= index < len(products):
         products[index] = updated_item
         return json.dumps(updated_item)
     else:
         return "That index does not exist"
 
+# Delete a product (DELETE)
 @app.delete("/api/products/<int:index>")
-def delete_products(index):
-    delete_item = request.get_json()
-    if 0 <= index <= len(products):
-        delete_products = products.pop(index)
-        return json.dumps(delete_item)
+def delete_product(index):
+    if 0 <= index < len(products):
+        deleted_item = products.pop(index)
+        return json.dumps(deleted_item)
     else:
         return "That index does not exist"
 
-# pacth -- the method to update an especific element  into python is: list.update
-
+# Partially update a product (PATCH)
 @app.patch("/api/products/<int:index>")
-def patch_products(index):
+def patch_product(index):
     updated_field = request.get_json()
-    if 0 <= index <= len(products):
-        updated_field(index).update(updated_field)
-        return json.dumps(updated_field)
+    if 0 <= index < len(products):
+        products[index].update(updated_field)
+        return json.dumps(products[index])
     else:
         return "That index does not exist"
 
+# Run the Flask server
 app.run(debug=True)
