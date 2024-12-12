@@ -1,7 +1,10 @@
-from flask import Flask, request
+from flask import Flask, request, abort
 import json
+from config import db
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app) # warning this disables CORS policy
 
 # Welcome page (root)
 @app.get("/")
@@ -51,6 +54,96 @@ def get_total_value():
 def get_products_by_category(category):
     filtered_products = [product for product in products if product.get('category') == category]
     return json.dumps(filtered_products)
+
+#############################################################################################################
+#############################################################################################################
+
+products = []
+def fix_id(obj):
+    obj["_id"] = str(obj["_id"])
+    return obj
+
+@app.get("/api/products")
+def get_products():
+    products_db = []
+    cursor = db.products.find({})
+    for prod in cursor:
+        products_db.append(fix_id(prod))
+    return json.dumps(products_db)
+
+@app.post("/api/products")
+def save_products():
+    item = request.get_json()
+    print(item)
+    # products.append(item)
+    db.products.insert_one(item)
+    return json.dumps(fix_id(item))
+
+@app.put("/api/products/<int:index>")
+def update_products(index):
+    updated_item = request.get_json()
+    if 0 <= index <= len(products):
+        products[index] = updated_item
+        return json.dumps(updated_item)
+    else:
+        return "That index does not exist"
+
+@app.delete("/api/products/<int:index>")
+def delete_products(index):
+    delete_item = request.get_json()
+    if 0 <= index <= len(products):
+        delete_item = products.pop(index)
+        return json.dumps(delete_item)
+    else:
+        return "That index does not exist" 
+
+# pacth -- the method to update an especific element into python is: list.update
+
+@app.patch("/api/products/<int:index>")
+def patch_products(index):
+    updated_field = request.get_json()
+    if 0 <= index <= len(products):
+        updated_field(index).update(updated_field)
+        return json.dumps(updated_field)
+    else:
+        return "That index does not exist"
+
+
+
+################################
+
+##########  COUPONS   ############
+
+##################################
+
+ 
+
+# post /api/coupons
+# save coupons into a db.coupons collection
+@app.post("/api/coupons")
+def save_coupon():
+    item = request.get_json()
+    db.coupons.insert_one(item)
+    return json.dumps(fix_id(item))
+
+
+@app.get("/api/coupons")
+def get_coupon():
+    coupons = []
+    cursor = db.coupons.find({})
+    for cp in cursor:
+        coupons.append(fix_id(cp))
+        return json.dumps(coupons) 
+
+@app.get("/api/coupons/<code>")
+def validate_coupon(code):
+    coupon = db.coupons.find_one({"code": code})
+    if coupon == None:
+        print("Error: invalid coupon")
+        return abort(404, "Invalid code")
+    
+    return json.dumps(fix_id(coupon))
+
 
 # Run the Flask server
 app.run(debug=True)
