@@ -1,0 +1,26 @@
+How to run the project
+
+** Backend:
+cd into the folder
+
+activate the virtual env:
+
+win:
+   venv\scripts\activate
+
+mac:
+
+   source venv/bin/activate
+
+
+run the server:
+python3 server.py
+
+
+** Front end:
+
+cd into the folder that contains package.json
+
+run the server:
+
+npm start

@@ -68,7 +68,8 @@ def get_products():
     products_db = []
     cursor = db.products.find({})
     for prod in cursor:
-        products_db.append(fix_id(prod))
+        if "title" in prod:
+            products_db.append(fix_id(prod))
     return json.dumps(products_db)
 
 @app.post("/api/products")
@@ -108,18 +109,6 @@ def patch_products(index):
     else:
         return "That index does not exist"
 
-
-
-################################
-
-##########  COUPONS   ############
-
-##################################
-
- 
-
-# post /api/coupons
-# save coupons into a db.coupons collection
 @app.post("/api/coupons")
 def save_coupon():
     item = request.get_json()
@@ -133,7 +122,7 @@ def get_coupon():
     cursor = db.coupons.find({})
     for cp in cursor:
         coupons.append(fix_id(cp))
-        return json.dumps(coupons) 
+    return json.dumps(coupons) 
 
 @app.get("/api/coupons/<code>")
 def validate_coupon(code):
